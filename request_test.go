@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"log"
 	"net"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/go-kit/log"
 )
 
 type MockConn struct {
@@ -52,7 +53,7 @@ func TestRequest_Connect(t *testing.T) {
 	s := &Server{config: &Config{
 		Rules:    PermitAll(),
 		Resolver: DNSResolver{},
-		Logger:   log.New(os.Stdout, "", log.LstdFlags),
+		Logger:   log.NewJSONLogger(os.Stdout),
 	}}
 
 	// Create the connect request
@@ -105,6 +106,7 @@ func TestRequest_Connect_RuleFail(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	go func() {
+		t := t
 		conn, err := l.Accept()
 		if err != nil {
 			t.Fatalf("err: %v", err)
@@ -127,7 +129,7 @@ func TestRequest_Connect_RuleFail(t *testing.T) {
 	s := &Server{config: &Config{
 		Rules:    PermitNone(),
 		Resolver: DNSResolver{},
-		Logger:   log.New(os.Stdout, "", log.LstdFlags),
+		Logger:   log.NewJSONLogger(os.Stdout),
 	}}
 
 	// Create the connect request
