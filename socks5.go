@@ -3,10 +3,11 @@ package socks5
 import (
 	"bufio"
 	"fmt"
+	"os"
 
 	"net"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"golang.org/x/net/context"
 )
@@ -79,6 +80,11 @@ func New(conf *Config) (*Server, error) {
 		conf.Rules = PermitAll()
 	}
 
+	// Ensure we have a log object
+	if conf.Logger == nil {
+		conf.Logger = log.NewJSONLogger(os.Stdout)
+	}
+
 	server := &Server{
 		config: conf,
 	}
@@ -121,7 +127,9 @@ func (s *Server) ServeConn(conn net.Conn) error {
 	// Read the version byte
 	version := []byte{0}
 	if _, err := bufConn.Read(version); err != nil {
-		level.Error(s.config.Logger).Log("[ERR] socks: Failed to get version byte: ", err)
+		level.Error(s.config.Logger).Log("[ERR] socks: Failed to get version byte: ", err,
+			"remote addr", conn.RemoteAddr())
+
 		return err
 	}
 
